@@ -1,157 +1,59 @@
-//import java.io.BufferedReader;
-//import java.io.BufferedWriter;
-//import java.io.FileReader;
-//import java.io.FileWriter;
-//import java.io.IOException;
-//
-///**
-// * Mega-Seninha — Atividade 1 (Paradigmas)
-// * Grupo: Pedro Nascimento e Yago Barbosa
-// * Professor: Lin Tse-Min
-// */
-//public class MegaSeninha {
-//
-//    public static void main(String[] args) {
-//        String arquivoEntrada = "APOSTAS.TXT";
-//        String arquivoSaida = "GANHADORES.TXT";
-//
-//        if (args.length >= 1) {
-//            arquivoEntrada = args[0];
-//        }
-//        if (args.length >= 2) {
-//            arquivoSaida = args[1];
-//        }
-//
-//        processarApostas(arquivoEntrada, arquivoSaida);
-//        System.out.println("Processamento concluido. Ganhadores em: " + arquivoSaida);
-//    }
-//
-//    /**
-//     * Procedimento principal: le o arquivo de apostas e grava os ganhadores.
-//     */
-//    public static void processarApostas(String arquivoEntrada, String arquivoSaida) {
-//        try {
-//            BufferedReader leitor = new BufferedReader(new FileReader(arquivoEntrada));
-//            BufferedWriter escritor = new BufferedWriter(new FileWriter(arquivoSaida));
-//
-//            String Sorteio = leitor.readLine();
-//            int[] numerosSorteados = converterLinhaEmNumeros(Sorteio);
-//
-//            String linhaCpf;
-//            while ((linhaCpf = leitor.readLine()) != null) {
-//                String linhaNumeros = leitor.readLine();
-//                int[] numerosAposta = converterLinhaEmNumeros(linhaNumeros);
-//
-//                if (acertouTodos(numerosSorteados, numerosAposta)) {
-//                    String cpfFormatado = formatarCpf(linhaCpf.trim());
-//                    escritor.write(cpfFormatado);
-//                    escritor.newLine();
-//                }
-//            }
-//
-//            leitor.close();
-//            escritor.close();
-//        } catch (IOException erro) {
-//            System.out.println("Erro ao processar arquivos: " + erro.getMessage());
-//        }
-//    }
-//
-//    /**
-//     * Converte uma linha com numeros separados por espaco em um vetor de int.
-//     */
-//    public static int[] converterLinhaEmNumeros(String linha) {
-//        String[] partes = linha.trim().split(" ");
-//        int[] numeros = new int[partes.length];
-//
-//        for (int i = 0; i < partes.length; i++) {
-//            numeros[i] = Integer.parseInt(partes[i]);
-//        }
-//
-//        return numeros;
-//    }
-//
-//    /**
-//     * Verifica se a aposta acertou os 6 numeros sorteados.
-//     */
-//    public static boolean acertouTodos(int[] sorteados, int[] escolhidos) {
-//        int acertos = 0;
-//
-//        for (int i = 0; i < escolhidos.length; i++) {
-//            if (contemNumero(sorteados, escolhidos[i])) {
-//                acertos = acertos + 1;
-//            }
-//        }
-//
-//        return acertos == 6;
-//    }
-//
-//    /**
-//     * Verifica se um numero existe no vetor.
-//     */
-//    public static boolean contemNumero(int[] vetor, int numero) {
-//        for (int i = 0; i < vetor.length; i++) {
-//            if (vetor[i] == numero) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-//
-//    /**
-//     * Formata CPF de 11 digitos para 123.456.789-10.
-//     */
-//    public static String formatarCpf(String cpf) {
-//        return cpf.substring(0, 3) + "."
-//                + cpf.substring(3, 6) + "."
-//                + cpf.substring(6, 9) + "-"
-//                + cpf.substring(9, 11);
-//    }
-//}
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 
-
-
-import java.io.*;
-import java.nio.file.*;
-import java.util.*;
-import java.util.stream.Collectors;
-
+/*
+ * Mega-Seninha - Atividade 1 (Paradigmas de Linguagens de Programacao - FNR)
+ * Equipe: Pedro Nascimento e Yago Barbosa
+ */
 public class MegaSeninha {
 
-    public static void main(String[] args) {
-        String entrada = args.length > 0 ? args[0] : "APOSTAS.TXT";
-        String saida = args.length > 1 ? args[1] : "GANHADORES.TXT";
+    public static void main(String[] args) throws IOException {
+        BufferedReader entrada = new BufferedReader(new FileReader("APOSTAS.TXT"));
+        FileWriter saida = new FileWriter("GANHADORES.TXT");
 
-        processarApostas(entrada, saida);
-        System.out.println("Processamento concluido. Ganhadores em: " + saida);
+        int[] sorteados = lerNumeros(entrada.readLine());
+
+        String cpf = entrada.readLine();
+        while (cpf != null) {
+            int[] aposta = lerNumeros(entrada.readLine());
+            if (acertouTodos(sorteados, aposta)) {
+                saida.write(formatarCpf(cpf) + "\n");
+            }
+            cpf = entrada.readLine();
+        }
+
+        entrada.close();
+        saida.close();
     }
 
-    public static void processarApostas(String entrada, String saida) {
-        try (BufferedReader leitor = Files.newBufferedReader(Path.of(entrada));
-             BufferedWriter escritor = Files.newBufferedWriter(Path.of(saida))) {
+    // Converte "14 23 53 56 57 60" em um vetor com os 6 numeros
+    public static int[] lerNumeros(String linha) {
+        String[] partes = linha.split(" ");
+        int[] numeros = new int[6];
+        for (int i = 0; i < 6; i++) {
+            numeros[i] = Integer.parseInt(partes[i]);
+        }
+        return numeros;
+    }
 
-            Set<Integer> sorteados = parseNumeros(leitor.readLine());
-
-            String cpf;
-            while ((cpf = leitor.readLine()) != null) {
-                Set<Integer> aposta = parseNumeros(leitor.readLine());
-
-                if (aposta.stream().filter(sorteados::contains).count() == 6) {
-                    escritor.write(formatarCpf(cpf.trim()));
-                    escritor.newLine();
+    // Conta quantos numeros da aposta estao entre os sorteados
+    public static boolean acertouTodos(int[] sorteados, int[] aposta) {
+        int acertos = 0;
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+                if (aposta[i] == sorteados[j]) {
+                    acertos++;
                 }
             }
-        } catch (IOException e) {
-            System.out.println("Erro ao processar arquivos: " + e.getMessage());
         }
+        return acertos == 6;
     }
 
-    private static Set<Integer> parseNumeros(String linha) {
-        return Arrays.stream(linha.trim().split("\\s+"))
-                .map(Integer::parseInt)
-                .collect(Collectors.toSet());
-    }
-
-    private static String formatarCpf(String cpf) {
-        return cpf.replaceAll("(\\d{3})(\\d{3})(\\d{3})(\\d{2})", "$1.$2.$3-$4");
+    // Transforma "12345678909" em "123.456.789-09"
+    public static String formatarCpf(String cpf) {
+        return cpf.substring(0, 3) + "." + cpf.substring(3, 6) + "."
+                + cpf.substring(6, 9) + "-" + cpf.substring(9, 11);
     }
 }
